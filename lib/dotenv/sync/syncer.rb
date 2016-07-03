@@ -7,28 +7,29 @@ module Dotenv
     class Syncer
 
       GITIGNORE = '.gitignore'
-      DEFAULT_FILE = '.env'
+      DEFAULT_SORT_FILE = '.env'
       DEFAULT_SECRET_FILE = '.env.local'
       DEFAULT_ENCRYPTED_FILE = '.env-encrypted'
-      DEFAULT_DECRYPTED_FILE = DEFAULT_SECRET_FILE
       DEFAULT_KEY_FILE = '.env-key'
+      DEFAULT_CONFIG_FILE = '.env-config'
       SEPARATOR = ">>>><<<<"
 
-      attr_reader :keychain
-
-      def initialize
+      def initialize(options)
+        @key_filename = options[:key] || DEFAULT_KEY_FILE
+        @secret_filename = options[:secret] || DEFAULT_SECRET_FILE
+        @encrypted_filename = options[:encrypted] || DEFAULT_ENCRYPTED_FILE
         validate_gitignore
       end
 
-      def generate_key(keyfile = DEFAULT_KEY_FILE)
+      def generate_key
         key = cipher.random_key
-        write_64(keyfile, key)
+        write_64(@key_filename, key)
       end
 
       def push
-        validate_file! DEFAULT_SECRET_FILE
-        key = read_key
-        data = open(DEFAULT_SECRET_FILE).read()
+        validate_file! @secret_filename
+        key = read_key!
+        data = open(@secret_filename).read()
         data = sort_lines(data.lines)
         cipher.encrypt
         cipher.key = key
@@ -36,24 +37,24 @@ module Dotenv
         cipher.iv = random_iv
         encrypted = cipher.update(data) + cipher.final
         encrypted = random_iv + SEPARATOR + encrypted
-        write_64 DEFAULT_ENCRYPTED_FILE, encrypted
-        puts "Successfully encrypted #{DEFAULT_SECRET_FILE}"
+        write_64 @encrypted_filename, encrypted
+        puts "Successfully encrypted #{@secret_filename}"
       end
 
       def pull
-        validate_file! DEFAULT_ENCRYPTED_FILE
-        key = read_key
-        data = read_64 DEFAULT_ENCRYPTED_FILE
+        validate_file! @encrypted_filename
+        key = read_key!
+        data = read_64 @encrypted_filename
         iv, encrypted = data.split(SEPARATOR)
         cipher.decrypt
         cipher.iv = iv
         cipher.key = key
         data = cipher.update(encrypted)
-        open(DEFAULT_DECRYPTED_FILE, 'w').write(data)
-        puts "Successfully decrypted #{DEFAULT_SECRET_FILE}"
+        open(@secret_filename, 'w').write(data)
+        puts "Successfully decrypted #{@secret_filename}"
       end
 
-      def sort(filename = DEFAULT_FILE)
+      def sort(filename)
         validate_file!(filename)
         lines = open(filename).readlines()
         output = sort_lines(lines)
@@ -66,7 +67,7 @@ module Dotenv
       def validate_gitignore
         gitignore_file = open(GITIGNORE,'a+')
         lines = gitignore_file.readlines
-        additions = [DEFAULT_SECRET_FILE, DEFAULT_KEY_FILE].reject do |secret_file|
+        additions = [@secret_filename, @key_filename].reject do |secret_file|
           lines.map(&:strip).include? secret_file
         end
         unless additions.empty?
@@ -85,11 +86,10 @@ module Dotenv
         Base64.decode64(open(file).read)
       end
 
-      def read_key
-        read_64 DEFAULT_KEY_FILE
+      def read_key!
+        read_64 @key_filename
       rescue Exception => e
-        puts "\n\nMISSING KEY FILE: #{DEFAULT_KEY_FILE} - either generate or download the file \n\n"
-        raise e
+        raise MissingKeyFile.new(@key_filename)
       end
 
       def sort_lines(lines)

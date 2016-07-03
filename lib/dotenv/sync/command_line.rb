@@ -6,26 +6,31 @@ module Dotenv
     class CommandLine < Thor
       desc "sort [DOTENV_FILE=.env]", "Sorts your .env file"
       def sort(filename = Dotenv::Sync::Syncer::DEFAULT_FILE)
-        puts "Hello #{filename}"
         Syncer.new.sort(filename)
       end
 
-      desc "pull [DOTENV_FILE=.env]", "Update your .env.local file from the encrypted version"
-      def pull(filename = Dotenv::Sync::Syncer::DEFAULT_SECRET_FILE)
-        puts "Hello #{filename}"
-        Syncer.new.pull
+      option :key, desc: "The keyfile", default: Syncer::DEFAULT_KEY_FILE, aliases: :k
+      option :encrypted, desc: "The shared encrypted file", default: Syncer::DEFAULT_ENCRYPTED_FILE, aliases: :e
+      option :secret, desc: "The private secret file", default: Syncer::DEFAULT_SECRET_FILE, aliases: :s
+      desc "pull", "Update your .env.local file from the encrypted version"
+      def pull
+        Syncer.new(options).pull
       end
 
-      desc "push [DOTENV_FILE=.env]", "Update the encrypted file from your version of .env.local"
-      def push(filename = Dotenv::Sync::Syncer::DEFAULT_SECRET_FILE)
-        puts "Hello #{filename}"
-        Syncer.new.push
+      option :key, desc: "The keyfile", default: Syncer::DEFAULT_KEY_FILE, aliases: :k
+      option :encrypted, desc: "The shared encrypted file", default: Syncer::DEFAULT_ENCRYPTED_FILE, aliases: :e
+      option :secret, desc: "The private secret file", default: Syncer::DEFAULT_SECRET_FILE, aliases: :s
+      desc "push", "Update the encrypted file from your version of .env.local"
+      def push
+        Syncer.new(options).push
       end
 
-      desc "generate_key [KEY_FILE=.env-key]", "Generate a new key file"
-      def generate_key(filename = Dotenv::Sync::Syncer::DEFAULT_KEY_FILE)
-        Syncer.new.generate_key(filename)
+      option :key, desc: "The keyfile", default: Syncer::DEFAULT_KEY_FILE, aliases: :k
+      desc "generate_key", "Generate a new key file"
+      def generate_key
+        Syncer.new(options).generate_key
       end
+
     end
   end
 end
