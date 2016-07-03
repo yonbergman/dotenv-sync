@@ -14,7 +14,7 @@ module Dotenv
       DEFAULT_CONFIG_FILE = '.env-config'
       SEPARATOR = ">>>><<<<"
 
-      def initialize(options)
+      def initialize(options = {})
         @key_filename = options[:key] || DEFAULT_KEY_FILE
         @secret_filename = options[:secret] || DEFAULT_SECRET_FILE
         @encrypted_filename = options[:encrypted] || DEFAULT_ENCRYPTED_FILE

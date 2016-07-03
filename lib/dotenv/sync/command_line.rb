@@ -1,11 +1,18 @@
 require 'thor'
 require_relative './syncer'
+require_relative './errors'
 
 module Dotenv
   module Sync
     class CommandLine < Thor
+
+      desc "[command]", "Runs the command while loading the env variables from .env (based on the dotenv gem)"
+      def any()
+        raise NotImplementedError.new
+      end
+
       desc "sort [DOTENV_FILE=.env]", "Sorts your .env file"
-      def sort(filename = Dotenv::Sync::Syncer::DEFAULT_FILE)
+      def sort(filename = Dotenv::Sync::Syncer::DEFAULT_SORT_FILE)
         Syncer.new.sort(filename)
       end
 
@@ -29,6 +36,10 @@ module Dotenv
       desc "generate_key", "Generate a new key file"
       def generate_key
         Syncer.new(options).generate_key
+      end
+
+      def self.handle_no_command_error(command)
+        raise CommandNotFound.new
       end
 
     end

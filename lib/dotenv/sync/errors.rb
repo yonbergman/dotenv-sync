@@ -11,5 +11,14 @@ module Dotenv
         super("Missing keyfile: #{filename} - either generate or download the file")
       end
     end
+
+    class NotImplementedError < Thor::Error
+      def initialize
+        super("Can't run any() command")
+      end
+    end
+
+    class CommandNotFound < StandardError
+    end
   end
 end
