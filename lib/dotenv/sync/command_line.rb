@@ -6,6 +6,20 @@ module Dotenv
   module Sync
     class CommandLine < Thor
 
+      def self.start(args)
+        begin
+          super(args)
+        rescue Dotenv::Sync::CommandNotFound => e
+          begin
+            require "dotenv/cli"
+            Dotenv::CLI.new(ARGV).run
+          rescue Exception
+            puts "dotenv gem not installed, falling back to dotenv-sync"
+            super(["--help"])
+          end
+        end
+      end
+
       desc "[command]", "Runs the command while loading the env variables from .env (based on the dotenv gem)"
       def any()
         raise NotImplementedError.new

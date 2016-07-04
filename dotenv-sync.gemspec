@@ -10,17 +10,14 @@ Gem::Specification.new do |spec|
   spec.email         = ["yonbergman@gmail.com"]
 
   spec.summary       = %q{This gem let's you sync dotenv files through encrypted file}
-  # spec.homepage      = "none"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.executables   = ["dotenv-sync"]
   spec.require_paths = ["lib"]
 
+  spec.add_development_dependency 'rspec'
   spec.add_development_dependency "bundler", "~> 1.12"
   spec.add_development_dependency "rake", "~> 10.0"
-  # spec.add_development_dependency "activesupport"
-  # spec.add_development_dependency "one_password", "~> 0.0.2"
-  spec.add_development_dependency "thor"
+  spec.add_runtime_dependency "thor"
 end

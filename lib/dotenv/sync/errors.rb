@@ -1,3 +1,5 @@
+require 'thor'
+
 module Dotenv
   module Sync
     class FilePresenceError < Thor::Error

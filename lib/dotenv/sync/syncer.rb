@@ -29,7 +29,7 @@ module Dotenv
       def push
         validate_file! @secret_filename
         key = read_key!
-        data = open(@secret_filename).read()
+        data = read(@secret_filename)
         data = sort_lines(data.lines)
         cipher.encrypt
         cipher.key = key
@@ -39,6 +39,7 @@ module Dotenv
         encrypted = random_iv + SEPARATOR + encrypted
         write_64 @encrypted_filename, encrypted
         puts "Successfully encrypted #{@secret_filename}"
+        data
       end
 
       def pull
@@ -49,16 +50,17 @@ module Dotenv
         cipher.decrypt
         cipher.iv = iv
         cipher.key = key
-        data = cipher.update(encrypted)
-        open(@secret_filename, 'w').write(data)
+        data = cipher.update(encrypted) + cipher.final
+        write(@secret_filename, data)
         puts "Successfully decrypted #{@secret_filename}"
+        data
       end
 
       def sort(filename)
         validate_file!(filename)
         lines = open(filename).readlines()
         output = sort_lines(lines)
-        open(filename, 'w').write(output)
+        write(filename, output)
         puts "Done sorting"
       end
 
@@ -78,12 +80,22 @@ module Dotenv
         gitignore_file.close
       end
 
+      def write(file, data)
+        open(file, 'w') do |f|
+          f.write(data)
+        end
+      end
+
       def write_64(file, data)
-        open(file, 'w').write(Base64.encode64(data))
+        write(file, Base64.encode64(data))
+      end
+
+      def read(file)
+        open(file).read
       end
 
       def read_64(file)
-        Base64.decode64(open(file).read)
+        Base64.decode64(read(file))
       end
 
       def read_key!
