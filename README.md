@@ -17,6 +17,8 @@ to encrypt and decrypt the `.env.local` file and share it in the repo as `.env-e
 
 You can use _1Password for teams_ or _Vault_ for sharing your secret keyfile.
 
+![](/docs/dotenv-sync.png)
+
 ## Installation
 
 Add this line to your application's Gemfile:
