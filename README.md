@@ -1,8 +1,21 @@
 # Dotenv::Sync
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/dotenv/sync`. To experiment with that code, run `bin/console` for an interactive prompt.
+Dotenv-sync is a small utility that lets you sync `.env` secrets in your repo.
 
-TODO: Delete this and the text above, and describe your gem
+This assumes you use [dotenv](https://github.com/bkeepers/dotenv) to manage and load your environment variables locally and relies on the fact that _dotenv_ supports environment specific dotenv files.
+
+## How it works
+dotenv-sync assumes you have two seperate files:
+
+```
+.env        - containts all non-secret env variables and shared on git
+.env.local  - contatins only the secrets and is not shared on git directly
+```
+
+This gem then uses a shared secret keyfile which can be managed in any way __important to not commit this file__,
+to encrypt and decrypt the `.env.local` file and share it in the repo as `.env-encrypted`.
+
+You can use _1Password for teams_ or _Vault_ for sharing your secret key file.
 
 ## Installation
 
@@ -22,7 +35,24 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Dotenv-sync provides a command line file with several commands to run.
+
+```
+dotenv-sync [command]                # Runs the command while loading the env variables from .env (based on the dotenv gem)
+dotenv-sync generate_key             # Generate a new key file
+dotenv-sync pull                     # Update your .env.local file from the encrypted version
+dotenv-sync push                     # Update the encrypted file from your version of .env.local
+dotenv-sync sort [DOTENV_FILE=.env]  # Sorts your .env file
+dotenv-sync help [COMMAND]           # Describe available commands or one specific command
+```
+
+### First use
+When initializing a new project you need to run `dotenv-sync generate_key` followed by `dotenv-sync push` to create the key which should be securely shared and the `.env-encrypted` file which can be commited.
+
+### Subsequent uses
+If you're updating `.env.local` and want to share a change run `dotenv-sync push` and commit the change `.env-encrypted` file.
+
+If you're pulling a change from git and see that `.env-encypted` changed run `dotenv-sync pull` to update your local `.env.local`
 
 ## Development
 
@@ -32,8 +62,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/dotenv-sync. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/yonbergman/dotenv-sync. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
