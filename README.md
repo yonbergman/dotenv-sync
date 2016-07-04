@@ -1,6 +1,6 @@
-# Dotenv::Sync
+# dotenv-sync
 
-Dotenv-sync is a small utility that lets you sync `.env` secrets in your repo.
+dotenv-sync is a small utility that lets you sync `.env` secrets in your repo.
 
 This assumes you use [dotenv](https://github.com/bkeepers/dotenv) to manage and load your environment variables locally and relies on the fact that _dotenv_ supports environment specific dotenv files.
 
