@@ -12,7 +12,7 @@ dotenv-sync assumes you have two seperate files:
 .env.local  - contatins only the secrets and is not shared on git directly
 ```
 
-This gem then uses a shared secret keyfile __which should not be commited__,
+This gem then uses a shared secret keyfile `.env-key` __which should not be commited__,
 to encrypt and decrypt the `.env.local` file and share it in the repo as `.env-encrypted`.
 
 You can use _1Password for teams_ or _Vault_ for sharing your secret keyfile.
