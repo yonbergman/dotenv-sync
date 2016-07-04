@@ -12,10 +12,10 @@ dotenv-sync assumes you have two seperate files:
 .env.local  - contatins only the secrets and is not shared on git directly
 ```
 
-This gem then uses a shared secret keyfile which can be managed in any way __important to not commit this file__,
+This gem then uses a shared secret keyfile __which should not be commited__,
 to encrypt and decrypt the `.env.local` file and share it in the repo as `.env-encrypted`.
 
-You can use _1Password for teams_ or _Vault_ for sharing your secret key file.
+You can use _1Password for teams_ or _Vault_ for sharing your secret keyfile.
 
 ## Installation
 
@@ -50,7 +50,7 @@ dotenv-sync help [COMMAND]           # Describe available commands or one specif
 When initializing a new project you need to run `dotenv-sync generate_key` followed by `dotenv-sync push` to create the key which should be securely shared and the `.env-encrypted` file which can be commited.
 
 ### Subsequent uses
-If you're updating `.env.local` and want to share a change run `dotenv-sync push` and commit the change `.env-encrypted` file.
+If you're updating `.env.local` and want to share a change run `dotenv-sync push` and then commit the changed `.env-encrypted` file.
 
 If you're pulling a change from git and see that `.env-encypted` changed run `dotenv-sync pull` to update your local `.env.local`
 
