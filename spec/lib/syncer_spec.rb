@@ -6,6 +6,8 @@ describe Dotenv::Sync::Syncer do
 
   UNSORTED = 'spec/support/unsorted.env'
   SORTED = 'spec/support/sorted.env'
+  NEW = 'spec/support/new.env'
+  MERGED = 'spec/support/merged.env'
 
   describe 'sort' do
     it 'should sort' do
@@ -59,6 +61,15 @@ describe Dotenv::Sync::Syncer do
       subject.pull
       data = read(secret)
       expect(data).to eq read(SORTED)
+    end
+
+    it 'can merge' do
+      copy(NEW, secret)
+      subject.push
+      copy(SORTED, secret)
+      subject.merge
+      data = read(secret)
+      expect(data).to eq read(MERGED)
     end
   end
 

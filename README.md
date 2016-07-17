@@ -45,6 +45,7 @@ Dotenv-sync provides a command line file with several commands to run.
 dotenv-sync [command]                # Runs the command while loading the env variables from .env (based on the dotenv gem)
 dotenv-sync generate_key             # Generate a new key file
 dotenv-sync pull                     # Update your .env.local file from the encrypted version
+dotenv-sync merge                    # Update your .env.local file from the encrypted version (retains local changes)
 dotenv-sync push                     # Update the encrypted file from your version of .env.local
 dotenv-sync sort [DOTENV_FILE=.env]  # Sorts your .env file
 dotenv-sync help [COMMAND]           # Describe available commands or one specific command

@@ -43,6 +43,28 @@ module Dotenv
       end
 
       def pull
+        data = load_data
+        write(@secret_filename, data)
+        puts "Successfully decrypted #{@secret_filename}"
+        data
+      end
+
+      def merge
+        existing_data = read(@secret_filename)
+        merged_data = merge_lines(load_data, existing_data)
+        write(@secret_filename, merged_data)
+        puts "Successfully merged #{@secret_filename}"
+        merged_data
+      end
+
+      def merge_lines(left, right)
+        left_lines = left.lines.map(&:strip)
+        right_lines = right.lines.map(&:strip)
+        merged = left_lines + (right_lines - left_lines)
+        sort_lines(merged)
+      end
+
+      def load_data
         validate_file! @encrypted_filename
         key = read_key!
         data = read_64 @encrypted_filename
@@ -51,9 +73,6 @@ module Dotenv
         cipher.iv = iv
         cipher.key = key
         data = cipher.update(encrypted) + cipher.final
-        write(@secret_filename, data)
-        puts "Successfully decrypted #{@secret_filename}"
-        data
       end
 
       def sort(filename)
