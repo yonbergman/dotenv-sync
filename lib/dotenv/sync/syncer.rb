@@ -2,10 +2,13 @@ require 'openssl'
 require 'base64'
 require 'dotenv/cli'
 require_relative './errors'
+require_relative './resolver'
 
 module Dotenv
   module Sync
     class Syncer
+
+      include Resolver
 
       GITIGNORE = '.gitignore'
       DEFAULT_SORT_FILE = '.env'
@@ -14,17 +17,7 @@ module Dotenv
       DEFAULT_KEY_FILE = '.env-key'
       DEFAULT_CONFIG_FILE = '.env-config'
       SEPARATOR = ">>>><<<<"
-
-      CONFLICT_REGEX = %r{
-        \A
-        <<<<<<<\s*(?<current_branch>.+?)
-        (?<current_branch_data>.*?)
-        =======
-        (?<other_branch_data>.*?)
-        >>>>>>>\s*(?<other_branch>.+?)
-        \Z
-      }xm
-
+      NEWLINE = "\n"
 
       def initialize(options = {})
         @key_filename = options[:key] || DEFAULT_KEY_FILE
@@ -64,57 +57,6 @@ module Dotenv
         merged_data
       end
 
-      def resolve_merge
-        validate_file! @encrypted_filename
-
-        encryption_key = read_key!
-        data = read(@encrypted_filename)
-        matches = CONFLICT_REGEX.match(data)
-
-        if matches.nil?
-          raise ConflictNotFound.new(@encrypted_filename)
-        end
-
-        branch_envs = [:current_branch, :other_branch].inject({}) do |h, branch|
-          branch_name = matches[branch]
-
-          iv, encrypted = extract(matches["#{branch}_data"])
-
-          decrypted = decrypt(encryption_key, iv, encrypted)
-
-          h[branch_name] = Dotenv::Parser.call(decrypted)
-          h
-        end
-
-        left_name, left = branch_envs.entries.first
-        right_name, right = branch_envs.entries.last
-
-        merged = right.inject(left) do |memo, entry|
-          key, right_value = entry
-          left_value = memo[key]
-
-          if left_value && left_value != right_value
-            puts 'Conflict: ' + key
-            puts "#{left_name}: #{left_value}"
-            puts "#{right_name}: #{right_value}"
-            puts
-
-            # TODO: Ask to choose
-          end
-
-          memo[key] = right_value
-          memo
-        end
-
-        merged = merged.map { |k, v| "#{k}=#{v}" }
-
-        data = sort_lines(merged)
-
-        encrypted = encrypt(encryption_key, data)
-
-        write_64(@encrypted_filename, encrypted)
-      end
-
       def merge_lines(left, right)
         left_lines = left.lines.map(&:strip)
         right_lines = right.lines.map(&:strip)
@@ -148,7 +90,7 @@ module Dotenv
           lines.map(&:strip).include? secret_file
         end
         unless additions.empty?
-          output = "\n# Dotenv syncing\n" + additions.join("\n")
+          output = "\n# Dotenv syncing\n" + additions.join(NEWLINE)
           gitignore_file.write(output)
         end
 
@@ -189,7 +131,7 @@ module Dotenv
         env_lines = lines.reject { |line| line.start_with?("#") }
         comments = lines - env_lines
         env_lines = env_lines.reject { |line| line.strip.empty? }.sort
-        (comments + env_lines).join("\n")
+        (comments + env_lines).join(NEWLINE)
       end
 
       def cipher
