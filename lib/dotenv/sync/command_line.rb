@@ -49,6 +49,14 @@ module Dotenv
       option :key, desc: "The keyfile", default: Syncer::DEFAULT_KEY_FILE, aliases: :k
       option :encrypted, desc: "The shared encrypted file", default: Syncer::DEFAULT_ENCRYPTED_FILE, aliases: :e
       option :secret, desc: "The private secret file", default: Syncer::DEFAULT_SECRET_FILE, aliases: :s
+      desc "resolve-merge", "Interactively resolve Git conflicts in .env.encrypted."
+      def resolve_merge
+        Syncer.new(options).resolve_merge
+      end
+
+      option :key, desc: "The keyfile", default: Syncer::DEFAULT_KEY_FILE, aliases: :k
+      option :encrypted, desc: "The shared encrypted file", default: Syncer::DEFAULT_ENCRYPTED_FILE, aliases: :e
+      option :secret, desc: "The private secret file", default: Syncer::DEFAULT_SECRET_FILE, aliases: :s
       desc "push", "Update the encrypted file from your version of .env.local"
       def push
         Syncer.new(options).push
