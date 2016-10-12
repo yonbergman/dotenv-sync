@@ -1,10 +1,14 @@
 require 'openssl'
 require 'base64'
+require 'dotenv/cli'
 require_relative './errors'
+require_relative './resolver'
 
 module Dotenv
   module Sync
     class Syncer
+
+      include Resolver
 
       GITIGNORE = '.gitignore'
       DEFAULT_SORT_FILE = '.env'
@@ -13,6 +17,7 @@ module Dotenv
       DEFAULT_KEY_FILE = '.env-key'
       DEFAULT_CONFIG_FILE = '.env-config'
       SEPARATOR = ">>>><<<<"
+      NEWLINE = "\n"
 
       def initialize(options = {})
         @key_filename = options[:key] || DEFAULT_KEY_FILE
@@ -31,12 +36,7 @@ module Dotenv
         key = read_key!
         data = read(@secret_filename)
         data = sort_lines(data.lines)
-        cipher.encrypt
-        cipher.key = key
-        random_iv = cipher.random_iv
-        cipher.iv = random_iv
-        encrypted = cipher.update(data) + cipher.final
-        encrypted = random_iv + SEPARATOR + encrypted
+        encrypted = encrypt(key, data)
         write_64 @encrypted_filename, encrypted
         puts "Successfully encrypted #{@secret_filename}"
         data
@@ -66,13 +66,11 @@ module Dotenv
 
       def load_data
         validate_file! @encrypted_filename
+
         key = read_key!
-        data = read_64 @encrypted_filename
-        iv, encrypted = data.split(SEPARATOR)
-        cipher.decrypt
-        cipher.iv = iv
-        cipher.key = key
-        data = cipher.update(encrypted) + cipher.final
+        iv, encrypted = extract(read(@encrypted_filename))
+
+        decrypt(key, iv, encrypted)
       end
 
       def sort(filename)
@@ -92,7 +90,7 @@ module Dotenv
           lines.map(&:strip).include? secret_file
         end
         unless additions.empty?
-          output = "\n# Dotenv syncing\n" + additions.join("\n")
+          output = "\n# Dotenv syncing\n" + additions.join(NEWLINE)
           gitignore_file.write(output)
         end
 
@@ -117,6 +115,11 @@ module Dotenv
         Base64.decode64(read(file))
       end
 
+      def extract(data)
+        data = Base64.decode64(data)
+        data.split(SEPARATOR)
+      end
+
       def read_key!
         read_64 @key_filename
       rescue Exception => e
@@ -128,11 +131,29 @@ module Dotenv
         env_lines = lines.reject { |line| line.start_with?("#") }
         comments = lines - env_lines
         env_lines = env_lines.reject { |line| line.strip.empty? }.sort
-        (comments + env_lines).join("\n")
+        (comments + env_lines).join(NEWLINE)
       end
 
       def cipher
         @cipher ||= OpenSSL::Cipher::AES256.new(:CBC)
+      end
+
+      def decrypt(key, iv, encrypted)
+        cipher.decrypt
+        cipher.iv = iv
+        cipher.key = key
+        cipher.update(encrypted) + cipher.final
+      end
+
+      def encrypt(key, data)
+        cipher.encrypt
+        cipher.key = key
+        random_iv = cipher.random_iv
+        cipher.iv = random_iv
+
+        encrypted = cipher.update(data) + cipher.final
+
+        random_iv + SEPARATOR + encrypted
       end
 
       def validate_file!(filename)

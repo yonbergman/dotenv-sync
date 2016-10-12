@@ -20,6 +20,12 @@ module Dotenv
       end
     end
 
+    class ConflictNotFound < Thor::Error
+      def initialize(filename)
+        super("No conflict found in #{filename}.")
+      end
+    end
+
     class CommandNotFound < StandardError
     end
   end
